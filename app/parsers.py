@@ -56,6 +56,35 @@ def looks_like_morning(text: str) -> bool:
     return len(lines) == 4 and bool(re.fullmatch(r"(?:是|否|有|无|已排便|未排便)", lines[2]))
 
 
+FOOD_KEYWORDS = (
+    "早餐",
+    "午餐",
+    "晚餐",
+    "鸡蛋",
+    "牛奶",
+    "蛋白粉",
+    "米饭",
+    "鸡胸",
+    "牛肉",
+    "鲑鱼",
+    "三文鱼",
+    "外卖",
+)
+
+
+def contains_food(text: str) -> bool:
+    """Return whether a message is likely an incremental diet log."""
+    return any(keyword in text for keyword in FOOD_KEYWORDS)
+
+
+def looks_like_evening_summary(text: str) -> bool:
+    """Recognize a complete evening summary before individual food intent."""
+    return bool(
+        re.search(r"(?:饮水|水)\s*[：:]?\s*\d+(?:\.\d+)?", text)
+        and re.search(r"(?:整体)?状态\s*[：:]?\s*\d{1,2}", text)
+    )
+
+
 def parse_evening(text: str) -> EveningData:
     lines = _nonempty_lines(text)
     joined = "\n".join(lines)
