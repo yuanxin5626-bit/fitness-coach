@@ -1,6 +1,13 @@
 import pytest
 
-from app.parsers import ParseError, estimate_protein, parse_evening, parse_morning
+from app.parsers import (
+    ParseError,
+    contains_food,
+    estimate_protein,
+    looks_like_evening_summary,
+    parse_evening,
+    parse_morning,
+)
 
 
 def test_parse_morning():
@@ -41,3 +48,9 @@ def test_parse_evening_example():
     assert "牛肉饭" in data.diet
     assert "胸2" in data.soreness
     assert estimate_protein(data.diet) > 90
+
+
+def test_intent_helpers():
+    assert contains_food("午餐：鸡胸肉和米饭")
+    assert not contains_food("今天休息")
+    assert looks_like_evening_summary("饮水 2.8L\n状态：7\n晚餐：牛肉")
