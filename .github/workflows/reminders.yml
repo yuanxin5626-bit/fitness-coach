@@ -1,0 +1,49 @@
+name: Free scheduled reminders
+
+on:
+  schedule:
+    # GitHub cron uses UTC. These are 07:30, 22:00 and Sunday 22:30 in Japan.
+    - cron: "30 22 * * *"
+    - cron: "0 13 * * *"
+    - cron: "30 13 * * 0"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Job to run
+        required: true
+        default: morning
+        type: choice
+        options: [morning, evening, weekly]
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Select scheduled job
+        id: select
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MANUAL_JOB: ${{ inputs.job }}
+          SCHEDULE: ${{ github.event.schedule }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            job="$MANUAL_JOB"
+          elif [ "$SCHEDULE" = "30 22 * * *" ]; then
+            job="morning"
+          elif [ "$SCHEDULE" = "0 13 * * *" ]; then
+            job="evening"
+          else
+            job="weekly"
+          fi
+          echo "job=$job" >> "$GITHUB_OUTPUT"
+
+      - name: Wake Render and send reminder
+        env:
+          BASE_URL: ${{ secrets.RENDER_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          JOB: ${{ steps.select.outputs.job }}
+        run: |
+          curl --fail --show-error --retry 4 --retry-delay 20 \
+            --max-time 180 -X POST \
+            -H "X-Cron-Secret: $CRON_SECRET" \
+            "$BASE_URL/tasks/$JOB"
