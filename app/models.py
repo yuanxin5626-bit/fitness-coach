@@ -17,6 +17,9 @@ SHEET_HEADERS = [
     "备注",
     "酸痛",
     "综合评分",
+    "恢复",
+    "应酬",
+    "所有消息",
     "用户ID",
     "更新时间",
 ]
@@ -38,6 +41,9 @@ class DailyRecord:
     notes: str = ""
     soreness: str = ""
     overall_score: int | None = None
+    recovery: str = ""
+    social: str = ""
+    messages: str = ""
     user_id: str = ""
     updated_at: str = ""
 
@@ -57,6 +63,9 @@ class DailyRecord:
             "notes",
             "soreness",
             "overall_score",
+            "recovery",
+            "social",
+            "messages",
             "user_id",
             "updated_at",
         )
@@ -89,6 +98,9 @@ class DailyRecord:
             notes=row.get("备注", ""),
             soreness=row.get("酸痛", ""),
             overall_score=number("综合评分", int),
+            recovery=row.get("恢复", ""),
+            social=row.get("应酬", ""),
+            messages=row.get("所有消息", ""),
             user_id=row.get("用户ID", ""),
             updated_at=row.get("更新时间", ""),
         )

@@ -27,7 +27,13 @@ def daily_report(record: DailyRecord, history: list[DailyRecord]) -> str:
         if record.bowel_movement
         else "未记录"
     )
-    analysis = "\n".join(coaching_analysis(record, history)) or "数据不足，完成记录后会自动分析。"
+    suggestions = coaching_analysis(record, history)
+    analysis = "\n".join(suggestions) or "数据不足，完成记录后会自动分析。"
+    sleep_score = min(10, round((record.sleep or 0) / 7 * 10)) if record.sleep is not None else "未评"
+    water_score = min(10, round((record.water or 0) / 3 * 10)) if record.water is not None else "未评"
+    diet_score = min(10, round((record.protein or 0) / 130 * 10)) if record.protein is not None else "未评"
+    training_score = 8 if is_training(record) else 6 if record.trained else "未评"
+    recovery_score = record.overall_score if record.overall_score is not None else "未评"
     return f"""--------------------------------
 {record.record_date.isoformat()}
 
@@ -59,15 +65,29 @@ def daily_report(record: DailyRecord, history: list[DailyRecord]) -> str:
 {record.soreness or "无/未记录"}
 
 --------------------------------
+【恢复】
+{record.recovery or "未记录"}
+
+--------------------------------
+【应酬】
+{record.social or "无"}
+
+--------------------------------
 【备注】
 {record.notes or "无"}
 
 --------------------------------
 【机器人分析】
+恢复评分：{recovery_score}/10
+训练评分：{training_score}/10
+饮食评分：{diet_score}/10
+睡眠评分：{sleep_score}/10
+饮水评分：{water_score}/10
+
 {analysis}
 
 建议：
-以恢复质量为优先；背部、上胸与核心训练循序渐进，左腿不适时立即降低强度。
+{chr(10).join((suggestions + ['以恢复质量为优先。', '背部、上胸与核心训练循序渐进。', '左腿不适时立即降低强度。'])[:3])}
 --------------------------------
 （这一整段可以直接复制给ChatGPT。）"""
 

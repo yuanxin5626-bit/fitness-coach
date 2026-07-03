@@ -68,6 +68,24 @@ class GoogleSheetsStorage(Storage):
                 },
             )
             ws.freeze(rows=1)
+        else:
+            current = ws.row_values(1)
+            if current != headers:
+                values = ws.get_all_values()[1:]
+                migrated = [
+                    [
+                        row[current.index(header)]
+                        if header in current and current.index(header) < len(row)
+                        else ""
+                        for header in headers
+                    ]
+                    for row in values
+                ]
+                ws.clear()
+                ws.update(
+                    values=[headers, *migrated],
+                    range_name=f"A1:{chr(64 + len(headers))}{len(migrated) + 1}",
+                )
         return ws
 
     def upsert_record(self, record: DailyRecord) -> None:
@@ -75,7 +93,8 @@ class GoogleSheetsStorage(Storage):
         rows = self.records.get_all_records()
         for index, row in enumerate(rows, start=2):
             if str(row.get("日期")) == key and str(row.get("用户ID")) == record.user_id:
-                self.records.update(values=[record.to_sheet_row()], range_name=f"A{index}:O{index}")
+                end = chr(64 + len(SHEET_HEADERS))
+                self.records.update(values=[record.to_sheet_row()], range_name=f"A{index}:{end}{index}")
                 return
         self.records.append_row(record.to_sheet_row(), value_input_option="USER_ENTERED")
 
